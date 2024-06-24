@@ -72,7 +72,7 @@ if __name__ == "__main__":
     gpt_2_model = load_gpt_2_model()
 
     while True:
-        query = input("\n\nQuery: ")
+        query = input("\n\nQuery: ").strip()
         print("\ngpt-nano:")
         query_model(gpt_nano_model, query, max_length=args.max_length, num_return_sequences=args.num_return_sequences)
         print("gpt-2:")
