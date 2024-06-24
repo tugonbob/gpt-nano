@@ -6,7 +6,7 @@ import tiktoken
 
 
 def load_model(device='cpu'):
-    checkpoint = torch.load("models/model_15000.pt", map_location=device)
+    checkpoint = torch.load("models/model_19072.pt", map_location=device)
     gptconf = GPTConfig(vocab_size=50304)
     model = GPT(gptconf)
     state_dict = checkpoint['model']
@@ -16,7 +16,7 @@ def load_model(device='cpu'):
     return model
 
 
-def query_model(query, device='cpu', max_length=30, num_return_sequences = 1):
+def query_model(query, device='cpu', max_length=100, num_return_sequences = 1):
     # prep model input
     enc = tiktoken.get_encoding('gpt2')
     tokens = enc.encode(query)
@@ -54,5 +54,6 @@ def query_model(query, device='cpu', max_length=30, num_return_sequences = 1):
 if __name__ == "__main__":
     model = load_model()
     while True:
-        query = input("gpt-nano Query: ")
+        query = input("\ngpt-nano Query: ")
+        # query_model(f"Human: {query} Assistant:")
         query_model(query)
