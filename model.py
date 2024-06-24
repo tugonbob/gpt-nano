@@ -1,10 +1,9 @@
-
+import inspect
+from dataclasses import dataclass
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-import inspect
-from dataclasses import dataclass
-import os
+
 
 class CausalSelfAttention(nn.Module):
 
@@ -19,6 +18,7 @@ class CausalSelfAttention(nn.Module):
         # regularization
         self.n_head = config.n_head
         self.n_embd = config.n_embd
+
 
     def forward(self, x):
         B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
@@ -45,11 +45,13 @@ class MLP(nn.Module):
         self.c_proj  = nn.Linear(4 * config.n_embd, config.n_embd)
         self.c_proj.NANOGPT_SCALE_INIT = 1
 
+
     def forward(self, x):
         x = self.c_fc(x)
         x = self.gelu(x)
         x = self.c_proj(x)
         return x
+
 
 class Block(nn.Module):
 
@@ -65,13 +67,15 @@ class Block(nn.Module):
         x = x + self.mlp(self.ln_2(x))
         return x
 
+
 @dataclass
 class GPTConfig:
     block_size: int = 1024 # max sequence length
     vocab_size: int = 50257 # number of tokens: 50,000 BPE merges + 256 bytes tokens + 1 <|endoftext|> token
-    n_layer: int = 48 # number of layers
-    n_head: int = 25 # number of heads
-    n_embd: int = 1600 # embedding dimension
+    n_layer: int = 12 # number of layers
+    n_head: int = 12 # number of heads
+    n_embd: int = 768 # embedding dimension
+
 
 class GPT(nn.Module):
 
@@ -93,6 +97,7 @@ class GPT(nn.Module):
         # init params
         self.apply(self._init_weights)
 
+
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             std = 0.02
@@ -103,6 +108,7 @@ class GPT(nn.Module):
                 torch.nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
 
     def forward(self, idx, targets=None):
         # idx is of shape (B, T)
@@ -123,6 +129,7 @@ class GPT(nn.Module):
         if targets is not None:
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
         return logits, loss
+
 
     @classmethod
     def from_pretrained(cls, model_type):
@@ -172,6 +179,7 @@ class GPT(nn.Module):
                     sd[k].copy_(sd_hf[k])
 
         return model
+
 
     def configure_optimizers(self, weight_decay, learning_rate, device_type):
         # start with all of the candidate parameters (that require grad)

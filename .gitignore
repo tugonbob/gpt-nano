@@ -1,7 +1,8 @@
 __pycache__/
-hellaswag/
 input.txt
-edu_fineweb10B/
 log/
 models/
-guanaco/
+datasets/fineweb/edu_fineweb100B/
+datasets/fineweb/edu_fineweb10B/
+datasets/fineweb/edu_fineweb350B/
+datasets/hellaswag/hellaswag/

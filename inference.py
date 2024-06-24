@@ -1,28 +1,35 @@
-# let's instead sample manually
 import torch
 from torch.nn import functional as F
 from model import GPT, GPTConfig
 import tiktoken
+from transformers import GPT2LMHeadModel
+
+# Global Variables
+DEVICE = 'cuda'
 
 
-def load_model(device='cpu'):
-    checkpoint = torch.load("models/model_19072.pt", map_location=device)
-    gptconf = GPTConfig(vocab_size=50304)
-    model = GPT(gptconf)
-    state_dict = checkpoint['model']
-    model.load_state_dict(state_dict)
+def load_gpt_nano_model(model_path):
+    model = GPT(GPTConfig(vocab_size=50304))
+    model.load_state_dict(torch.load(model_path, map_location=DEVICE)['model'])
     model.eval()
-    model.to(device)
+    model.to(DEVICE)
     return model
 
 
-def query_model(query, device='cpu', max_length=100, num_return_sequences = 1):
+def load_gpt_2_model():
+    model = GPT2LMHeadModel.from_pretrained("gpt2") # 124M
+    model.eval()
+    model.to(DEVICE)
+    return model
+
+
+def query_model(model, query, max_length=100, num_return_sequences = 1):
     # prep model input
     enc = tiktoken.get_encoding('gpt2')
     tokens = enc.encode(query)
     tokens = torch.tensor(tokens, dtype=torch.long) # (8,)
     tokens = tokens.unsqueeze(0).repeat(num_return_sequences, 1) # (5, 8)
-    x = tokens.to(device)
+    x = tokens.to(DEVICE)
 
     # generate!
     while x.size(1) < max_length: # max_length=30
@@ -48,12 +55,25 @@ def query_model(query, device='cpu', max_length=100, num_return_sequences = 1):
     for i in range(num_return_sequences):
         tokens = x[i, :max_length].tolist()
         decoded = enc.decode(tokens)
-        print(">", decoded)
+        print(">", decoded, "\n")
 
 
 if __name__ == "__main__":
-    model = load_model()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--device", type=str, default="cuda", help="the device to use")
+    parser.add_argument("-m", "--max_length", type=int, default=100, help="the max number of tokens to generate")
+    parser.add_argument("-n", "--num_return_sequences", type=int, default=1, help="the number of samples the model should generate")
+    parser.add_argument("--model_path", type=str, help="your .pt model checkpoint path")
+    args = parser.parse_args()
+    DEVICE = args.device
+
+    gpt_nano_model = load_gpt_nano_model(args.model_path)
+    gpt_2_model = load_gpt_2_model()
+
     while True:
-        query = input("\ngpt-nano Query: ")
-        # query_model(f"Human: {query} Assistant:")
-        query_model(query)
+        query = input("\n\nQuery: ")
+        print("\ngpt-nano:")
+        query_model(gpt_nano_model, query, max_length=args.max_length, num_return_sequences=args.num_return_sequences)
+        print("gpt-2:")
+        query_model(gpt_2_model, query, max_length=args.max_length, num_return_sequences=args.num_return_sequences)
