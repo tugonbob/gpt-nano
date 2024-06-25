@@ -52,17 +52,18 @@ if __name__ == "__main__":
     # create the cache the local directory if it doesn't exist yet
     DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), local_dir)
     os.makedirs(DATA_CACHE_DIR, exist_ok=True)
+    RAW_DATA_PATH = os.path.join(os.path.dirname(__file__), "civil_wiki.txt")
 
-    civil_wiki_txt_exists = os.path.exists("./civil_wiki.txt")
+    civil_wiki_txt_exists = os.path.exists(RAW_DATA_PATH)
     if not civil_wiki_txt_exists:
         # download related civil engineering articles
         wiki_wiki = wikipediaapi.Wikipedia('gpt-nano (joshuakgao@gmail.com)', 'en', extract_format=wikipediaapi.ExtractFormat.WIKI)
         cat = wiki_wiki.page("Category: Civil engineering")
         print("Category members: Category: Civil engineering")
-        f = open("./civil_wiki.txt", 'a')
+        f = open(RAW_DATA_PATH, 'a')
         print_categorymembers(cat.categorymembers, f, max_level=1)
 
-    f = open('./civil_wiki.txt', 'r')
+    f = open(RAW_DATA_PATH, 'r')
     civil_wiki = f.readlines()
 
     # tokenize all documents and write output shards, each of shard_size tokens (last shard has remainder)
