@@ -95,8 +95,8 @@ def train(
         total_batch_size = 524288, # 2**19, ~0.5M, in number of tokens
         max_steps = 19073, # 19,073 steps is ~1 epoch, if data is 10B tokens and batch size 0.5M tokens
         run_name = "",
-        sample_frequency = 250, # display model inference every this amount of steps
-        save_checkpoint_frequency = 5000, # save a model checkpoint this amount of steps
+        checkpoint_frequency = 5000, # save a model checkpoint this amount of steps
+        eval_frequency = 250, 
         ):
     import torch.distributed as dist
     # run the training loop
@@ -195,7 +195,7 @@ def train(
         last_step = (step == max_steps - 1)
 
         # once in a while evaluate our validation loss
-        if step % sample_frequency == 0 or last_step:
+        if step % eval_frequency == 0 or last_step:
             model.eval()
             val_loader.reset()
             with torch.no_grad():
@@ -214,7 +214,7 @@ def train(
                 print(f"validation loss: {val_loss_accum.item():.4f}")
                 with open(log_file, "a") as f:
                     f.write(f"{step} val {val_loss_accum.item():.4f}\n")
-                if step > 0 and (step % save_checkpoint_frequency == 0 or last_step):
+                if step > 0 and (step % checkpoint_frequency == 0 or last_step):
                     # optionally write model checkpoints
                     checkpoint_path = os.path.join(models_dir, f"{run_name}_model_{step:05d}.pt")
                     checkpoint = {
@@ -228,7 +228,7 @@ def train(
                     torch.save(checkpoint, checkpoint_path)
 
         # once in a while evaluate hellaswag
-        if (step % sample_frequency == 0 or last_step) and (not use_compile):
+        if (step % eval_frequency == 0 or last_step) and (not use_compile):
             num_correct_norm = 0
             num_total = 0
             for i, example in enumerate(iterate_examples("val")):
@@ -261,7 +261,7 @@ def train(
                     f.write(f"{step} hella {acc_norm:.4f}\n")
 
         # once in a while generate from the model (except step 0, which is noise)
-        if ((step > 0 and step % sample_frequency == 0) or last_step) and (not use_compile):
+        if ((step > 0 and step % eval_frequency == 0) or last_step) and (not use_compile):
             model.eval()
             num_return_sequences = 4
             max_length = 32
@@ -342,12 +342,12 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_dir", type=str, default="./datasets/fineweb/edu_fineweb10B", help="path to training dataset dir")
-    parser.add_argument("--batch_size", type=int, default=64, help="micro batch size")
+    parser.add_argument("--batch_size", type=int, default=16, help="micro batch size")
     parser.add_argument("--lr", type=int, default=6e-4, help="max learning rate")
     parser.add_argument("--max_steps", type=int, default=999999999, help="max number of steps to train")
     parser.add_argument("--run_name", type=str, default="", help="the name of the run - this will define log file and model checkpoint names")
-    parser.add_argument("--sample_frequency", type=int, default=250, help="number of steps to get a sample from model")
-    parser.add_argument("--save_checkpoint_frequency", type=int, default=5000, help="number of steps to save a checkpoint model")
+    parser.add_argument("--checkpoint_frequency", type=int, default=5000, help="number of steps to save a checkpoint model")
+    parser.add_argument("--eval_frequency", type=int, default=250, help="number of steps to get val accuracy")
     args = parser.parse_args()
 
     train(
@@ -356,6 +356,6 @@ if __name__ == "__main__":
         max_lr=args.lr,
         max_steps=args.max_steps,
         run_name=args.run_name,
-        sample_frequency=args.sample_frequency,
-        save_checkpoint_frequency=args.save_checkpoint_frequency
+        checkpoint_frequency=args.checkpoint_frequency,
+        eval_frequency=args.eval_frequency
     )
