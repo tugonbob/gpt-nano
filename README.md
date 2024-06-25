@@ -7,7 +7,7 @@ https://docs.anaconda.com/miniconda/#quick-command-line-install
 ```shell
 conda create -n gpt-nano python=3.12
 conda activate gpt-nano
-pip install torch tiktoken transformers numpy datasets matplotlib
+pip install torch tiktoken transformers numpy datasets matplotlib wikipediaapi
 python datasets/fineweb/prepare.py # download FineWeb database
 python datasets/hellaswag/prepare.py # download hellaswag evaluation database
 python train.py # train gpt-nano model
