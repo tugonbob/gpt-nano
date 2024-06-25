@@ -97,6 +97,7 @@ def train(
         run_name = "",
         checkpoint_frequency = 5000, # save a model checkpoint this amount of steps
         eval_frequency = 250, 
+        init_from="scratch",
         ):
     import torch.distributed as dist
     # run the training loop
@@ -150,9 +151,18 @@ def train(
 
     torch.set_float32_matmul_precision('high')
 
-    # create model
-    model = GPT(GPTConfig(vocab_size=50304))
-    # model = GPT.from_pretrained("gpt2") # or init from OpenAI GPT-2
+    if init_from == 'scratch':
+        # create model
+        model = GPT(GPTConfig(vocab_size=50304))
+    elif init_from == 'gpt-2':
+        # create model from hugging face
+        model = GPT.from_pretrained("gpt2") # or init from OpenAI GPT-2
+    else:
+        # load model from path
+        checkpoint = torch.load(init_from, map_location=DEVICE)
+        model = GPT(GPTConfig(vocab_size=50304))
+        model.load_state_dict(checkpoint['model'])
+
     model.to(DEVICE)
     use_compile = False # torch.compile interferes with HellaSwag eval and Generation. TODO fix
     if use_compile:
@@ -348,14 +358,15 @@ if __name__ == "__main__":
     parser.add_argument("--run_name", type=str, default="", help="the name of the run - this will define log file and model checkpoint names")
     parser.add_argument("--checkpoint_frequency", type=int, default=5000, help="number of steps to save a checkpoint model")
     parser.add_argument("--eval_frequency", type=int, default=250, help="number of steps to get val accuracy")
+    parser.add_argument("--init_from", type=str, default="scratch", help="'scratch' creates a new custom gpt-2 model, 'gpt-2' creates a model from the huggingface gpt-2 model. you can also give a file path to a model you want to continue training on.")
     args = parser.parse_args()
 
     train(
-
         B=args.batch_size,
         max_lr=args.lr,
         max_steps=args.max_steps,
         run_name=args.run_name,
         checkpoint_frequency=args.checkpoint_frequency,
-        eval_frequency=args.eval_frequency
+        eval_frequency=args.eval_frequency,
+        init_from=args.init_from
     )
