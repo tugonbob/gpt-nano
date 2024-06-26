@@ -4,6 +4,8 @@ import numpy as np
 import tiktoken
 import wikipediaapi
 from tqdm import tqdm  # pip install tqdm
+import re
+
 
 
 def print_categorymembers(categorymembers, f, level=0, max_level=1):
@@ -14,18 +16,23 @@ def print_categorymembers(categorymembers, f, level=0, max_level=1):
             else:
                  p_wiki = wiki_wiki.page(c.title)
                  print(p_wiki.title)
-                 f.write(filter_non_ascii(c.title + ": " + ' '.join(p_wiki.text.split())) + "\n")
+                 f.write(clean_text(c.title + ": " + ' '.join(p_wiki.text.split())) + "\n")
 
 
-def filter_non_ascii(text):
-  """
-  Filters a string for non-ASCII characters.
-  """
-  filtered_text = ""
-  for char in text:
-    if ord(char) < 128:  # Check if character is within ASCII range (0-127)
-      filtered_text += char
-  return filtered_text
+def clean_text(text):
+    """
+    Filters a string for non-ASCII characters, and removes "== References ==" and "== External Links ==" strings
+    """
+    filtered_text = ""
+    for char in text:
+        if ord(char) < 128:  # Check if character is within ASCII range (0-127)
+            filtered_text += char
+
+    pattern = r"== References =="  # Regular expression pattern
+    filtered_text = re.sub(pattern, "", filtered_text, flags=re.MULTILINE)
+    pattern = r"== External links =="
+    filtered_text = re.sub(pattern, "", filtered_text, flags=re.MULTILINE)
+    return filtered_text
 
 
 # init the tokenizer
