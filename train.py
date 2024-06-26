@@ -353,7 +353,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_dir", type=str, default="./datasets/fineweb/edu_fineweb10B", help="path to training dataset dir")
     parser.add_argument("--batch_size", type=int, default=16, help="micro batch size")
-    parser.add_argument("--lr", type=int, default=6e-4, help="max learning rate")
+    parser.add_argument("--lr", type=float, default=6e-4, help="max learning rate")
     parser.add_argument("--max_steps", type=int, default=999999999, help="max number of steps to train")
     parser.add_argument("--run_name", type=str, default="", help="the name of the run - this will define log file and model checkpoint names")
     parser.add_argument("--checkpoint_frequency", type=int, default=5000, help="number of steps to save a checkpoint model")
@@ -362,6 +362,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     train(
+        data_root=args.dataset_dir,
         B=args.batch_size,
         max_lr=args.lr,
         max_steps=args.max_steps,
