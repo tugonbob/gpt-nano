@@ -54,7 +54,7 @@ def write_datafile(filename, tokens_np):
 
 if __name__ == "__main__":
     local_dir = "civil_wiki"
-    shard_size = int(1e5) # 100M tokens per shard, total of 100 shards
+    shard_size = int(5e5) # 100M tokens per shard, total of 100 shards
 
     # create the cache the local directory if it doesn't exist yet
     DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), local_dir)
