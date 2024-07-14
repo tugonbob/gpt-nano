@@ -1,10 +1,2 @@
 __pycache__/
-input.txt
-log/
-models/
-datasets/fineweb/edu_fineweb100B/
-datasets/fineweb/edu_fineweb10B/
-datasets/fineweb/edu_fineweb350B/
-datasets/hellaswag/hellaswag/
-datasets/wikipedia/civil_wiki/
 datasets/wikipedia/civil_wiki.txt
